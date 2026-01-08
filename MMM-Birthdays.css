@@ -1,0 +1,30 @@
+.MMM-Birthdays .birthday-container {
+	width: 100%;
+	text-align: left;
+}
+
+.MMM-Birthdays .birthday-table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.MMM-Birthdays .birthday-name-header,
+.MMM-Birthdays .birthday-date-header {
+	font-weight: bold;
+	padding: 5px;
+	border-bottom: 1px solid #ffffff;
+}
+
+.MMM-Birthdays .birthday-name,
+.MMM-Birthdays .birthday-date {
+	padding: 5px;
+}
+
+.MMM-Birthdays .birthday-name {
+	width: 70%;
+}
+
+.MMM-Birthdays .birthday-date {
+	width: 30%;
+	text-align: right;
+}

@@ -1,0 +1,16 @@
+{
+	"name": "MMM-Birthdays",
+	"version": "1.0.0",
+	"description": "A MagicMirror module to display birthdays",
+	"main": "MMM-Birthdays.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"keywords": [
+		"magicmirror",
+		"module",
+		"birthdays"
+	],
+	"author": "Olivier Leteneur",
+	"license": "MIT"
+}
