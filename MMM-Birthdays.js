@@ -1,84 +1,80 @@
-Module.register('MMM-Birthdays', {
-	// Default module config
+/* MagicMirror² module: upcoming birthdays. The logic lives in birthdays.js (tested with node:test);
+ * this file only builds the DOM, with textContent only. */
+Module.register("MMM-Birthdays", {
 	defaults: {
-		updateInterval: 24 * 60 * 60 * 1000, // Update daily
-		animationSpeed: 1000,
-		birthdays: [
-			// Example birthday entries
-			{ name: "John Doe", date: "1990-05-15" },
-			{ name: "Jane Smith", date: "1985-11-22" }
-		]
+		birthdays: [], // [{ name: "Ada", date: "1815-12-10" }], or "--12-10" when the year is unknown
+		maxDays: 30,   // only show birthdays within this many days
+		limit: 5,      // maximum number of lines, 0 for no limit
+		showAge: true
 	},
 
-	// Define required scripts
-	getScripts: function() {
-		return [];
+	getScripts() {
+		return [this.file("birthdays.js")];
 	},
 
-	// Define required styles
-	getStyles: function() {
-		return ['MMM-Birthdays.css'];
+	getStyles() {
+		return ["MMM-Birthdays.css"];
 	},
 
-	// Override dom generator
-	getDom: function() {
-		const wrapper = document.createElement('div');
-		wrapper.className = 'birthday-container';
+	getTranslations() {
+		return { en: "translations/en.json", fr: "translations/fr.json" };
+	},
 
-		// If no birthdays, show a message
-		if (this.config.birthdays.length === 0) {
-			wrapper.innerHTML = 'No upcoming birthdays';
+	start() {
+		this.scheduleMidnightUpdate();
+	},
+
+	// Refresh just after midnight: "tomorrow" becomes "today", ages change.
+	scheduleMidnightUpdate() {
+		setTimeout(() => {
+			this.updateDom();
+			this.scheduleMidnightUpdate();
+		}, BirthdayLogic.msUntilMidnight(new Date()) + 1000);
+	},
+
+	getDom() {
+		const wrapper = document.createElement("div");
+		wrapper.className = "birthday-container small";
+		const { items, invalid } = BirthdayLogic.upcomingBirthdays(this.config.birthdays, new Date(), {
+			maxDays: this.config.maxDays,
+			limit: this.config.limit
+		});
+		if (invalid.length > 0) {
+			Log.warn(`${this.name}: ${invalid.length} invalid entr${invalid.length > 1 ? "ies" : "y"} ignored`, invalid);
+		}
+
+		if (items.length === 0) {
+			wrapper.classList.add("dimmed");
+			wrapper.textContent = this.translate("NO_UPCOMING");
 			return wrapper;
 		}
 
-		// Create birthday list
-		const table = document.createElement('table');
-		table.className = 'birthday-table';
-
-		// Table header
-		const headerRow = table.insertRow();
-		const nameHeader = headerRow.insertCell();
-		const dateHeader = headerRow.insertCell();
-		nameHeader.textContent = 'Name';
-		dateHeader.textContent = 'Birthday';
-		nameHeader.className = 'birthday-name-header';
-		dateHeader.className = 'birthday-date-header';
-
-		// Populate birthdays
-		this.config.birthdays.forEach(birthday => {
+		const locale = config.locale || config.language;
+		const table = document.createElement("table");
+		table.className = "birthday-table";
+		for (const birthday of items) {
 			const row = table.insertRow();
-			const nameCell = row.insertCell();
-			const dateCell = row.insertCell();
+			if (birthday.days === 0) row.className = "birthday-today bright";
 
-			nameCell.textContent = birthday.name;
-			dateCell.textContent = this.formatBirthday(birthday.date);
+			const name = row.insertCell();
+			name.className = "birthday-name";
+			name.textContent = birthday.name;
+			if (this.config.showAge && birthday.age !== null) {
+				const age = document.createElement("span");
+				age.className = "birthday-age dimmed";
+				age.textContent = ` ${this.translate("TURNS", { age: birthday.age })}`;
+				name.appendChild(age);
+			}
 
-			nameCell.className = 'birthday-name';
-			dateCell.className = 'birthday-date';
-		});
-
+			const when = BirthdayLogic.whenLabel(birthday.days);
+			const date = row.insertCell();
+			date.className = "birthday-date";
+			date.textContent = birthday.days > 1
+				? birthday.date.toLocaleDateString(locale, { day: "numeric", month: "long" })
+				: this.translate(when.key, when.vars);
+			date.title = this.translate(when.key, when.vars);
+		}
 		wrapper.appendChild(table);
 		return wrapper;
-	},
-
-	// Helper method to format birthday
-	formatBirthday: function(dateString) {
-		const date = new Date(dateString);
-		return date.toLocaleDateString('en-US', { 
-			month: 'long', 
-			day: 'numeric' 
-		});
-	},
-
-	// Optional: Notification handler
-	socketNotificationReceived: function(notification, payload) {
-		// Handle any socket notifications if needed
-		console.log('Notification received:', notification, payload);
-	},
-
-	// Module init
-	start: function() {
-		// Optional: Set up any initial processes
-		console.log('Birthday module started');
 	}
 });

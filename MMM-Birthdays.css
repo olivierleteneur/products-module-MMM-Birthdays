@@ -8,23 +8,16 @@
 	border-collapse: collapse;
 }
 
-.MMM-Birthdays .birthday-name-header,
-.MMM-Birthdays .birthday-date-header {
-	font-weight: bold;
-	padding: 5px;
-	border-bottom: 1px solid #ffffff;
-}
-
 .MMM-Birthdays .birthday-name,
 .MMM-Birthdays .birthday-date {
-	padding: 5px;
-}
-
-.MMM-Birthdays .birthday-name {
-	width: 70%;
+	padding: 3px 5px;
 }
 
 .MMM-Birthdays .birthday-date {
-	width: 30%;
 	text-align: right;
+	white-space: nowrap;
+}
+
+.MMM-Birthdays .birthday-today .birthday-name::before {
+	content: "🎂 ";
 }
