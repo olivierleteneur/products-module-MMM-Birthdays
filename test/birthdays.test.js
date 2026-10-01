@@ -7,6 +7,8 @@ const {
 // Fixed local dates: tests never depend on the real clock.
 const day = (y, m, d) => new Date(y, m - 1, d);
 const ymd = (date) => [date.getFullYear(), date.getMonth() + 1, date.getDate()];
+// Assigning undefined to process.env.TZ would store the string "undefined" (read as UTC).
+const restoreTz = (saved) => { if (saved === undefined) delete process.env.TZ; else process.env.TZ = saved; };
 
 // --- parseBirthday ----------------------------------------------------------------
 
@@ -39,7 +41,7 @@ test("parseBirthday ne décale jamais le jour, quel que soit le fuseau (bug de l
 			assert.deepEqual([month, d], [5, 15], tz);
 		}
 	} finally {
-		process.env.TZ = saved;
+		restoreTz(saved);
 	}
 });
 
@@ -66,38 +68,38 @@ test("daysBetween compte des jours calendaires, même au passage à l'heure d'é
 		assert.equal(daysBetween(day(2026, 12, 31), day(2027, 1, 1)), 1);
 		assert.equal(daysBetween(day(2026, 5, 15), day(2026, 5, 15)), 0);
 	} finally {
-		process.env.TZ = saved;
+		restoreTz(saved);
 	}
 });
 
 // --- upcomingBirthdays ---------------------------------------------------------------------
 
 const people = [
-	{ name: "Yvonne", date: "1980-08-28" },
-	{ name: "Basile", date: "2016-03-19" },
-	{ name: "Ana", date: "1990-03-19" },
-	{ name: "Sans année", date: "--03-25" },
-	{ name: "Hector", date: "2019-04-17" },
+	{ name: "Winston Churchill", date: "1874-11-30" },
+	{ name: "Barack Obama", date: "1961-08-04" },
+	{ name: "Ana", date: "1990-08-04" },
+	{ name: "Sans année", date: "--08-10" },
+	{ name: "Charles de Gaulle", date: "1890-11-22" },
 ];
+const aug4 = () => day(2026, 8, 4); // built inside each test, in the current time zone
 
 test("upcomingBirthdays trie par proximité puis par nom, avec jours restants et âge atteint", () => {
-	const { items } = upcomingBirthdays(people, day(2026, 3, 19), { maxDays: 365, limit: 0 });
+	const { items } = upcomingBirthdays(people, aug4(), { maxDays: 365, limit: 0 });
 	assert.deepEqual(items.map((b) => [b.name, b.days, b.age]), [
 		["Ana", 0, 36],
-		["Basile", 0, 10],
+		["Barack Obama", 0, 65],
 		["Sans année", 6, null],
-		["Hector", 29, 7],
-		["Yvonne", 162, 46],
+		["Charles de Gaulle", 110, 136],
+		["Winston Churchill", 118, 152],
 	]);
-	assert.deepEqual(ymd(items[3].date), [2026, 4, 17]);
+	assert.deepEqual(ymd(items[3].date), [2026, 11, 22]);
 });
 
 test("upcomingBirthdays respecte la fenêtre maxDays et la limite", () => {
-	const today = day(2026, 3, 19);
-	assert.deepEqual(upcomingBirthdays(people, today, { maxDays: 10, limit: 0 }).items.map((b) => b.name),
-		["Ana", "Basile", "Sans année"]);
-	assert.deepEqual(upcomingBirthdays(people, today, { maxDays: 365, limit: 2 }).items.map((b) => b.name),
-		["Ana", "Basile"]);
+	assert.deepEqual(upcomingBirthdays(people, aug4(), { maxDays: 10, limit: 0 }).items.map((b) => b.name),
+		["Ana", "Barack Obama", "Sans année"]);
+	assert.deepEqual(upcomingBirthdays(people, aug4(), { maxDays: 365, limit: 2 }).items.map((b) => b.name),
+		["Ana", "Barack Obama"]);
 });
 
 test("upcomingBirthdays passe le cap du 31 décembre", () => {
