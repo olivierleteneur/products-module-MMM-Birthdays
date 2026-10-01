@@ -8,7 +8,7 @@ A [MagicMirror²](https://magicmirror.builders/) module showing **upcoming** bir
 
 ```bash
 cd ~/MagicMirror/modules
-git clone https://github.com/olivierleteneur/products-MagicMirror-Modules-Birthdays.git MMM-Birthdays
+git clone https://github.com/olivierleteneur/products-module-MMM-Birthdays.git MMM-Birthdays
 ```
 
 No dependency, nothing to build.
